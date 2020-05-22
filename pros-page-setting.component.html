@@ -1,0 +1,933 @@
+<div class="setting-sec">
+  <!-- <h3 class="title">PRO’s Pages - Just talk</h3> -->
+  <ul class="page-links">
+    <li>
+      <a class="back-icon ng-star-inserted" [routerLink]="['/pros-page/pros-page-wall']">
+        <img _ngcontent-axq-c19="" alt="backaerrow" src="../../../../assets/image/back-aerrow.png">
+      </a>
+    </li>
+    <li><a [routerLink]="['/pros-page/pros-page-about']">About</a></li>
+    <li><a [routerLink]="['/pros-page/pros-page-setting']">Settings</a></li>
+  </ul>
+  <div class="setting-form" *ngIf="(settingsData | json) != '{}'">
+    <form autocomplete="off" [formGroup]="updateSettingsForm" novalidate>
+      <div class="form-group">
+        <label>Name<span class="font-red">*</span></label>
+        <div class="text-form">
+          <input type="text" class="form-control" formControlName="name" placeholder="Open book" maxlength="20">
+          <span class="text-limit">{{f.name.value?.length}}/20</span>
+          <span class="error" *ngIf="f.name.touched && f.name.errors?.required">
+            Please enter name.
+          </span>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>E-Mail<span class="font-red">*</span></label>
+        <div class="text-form">
+          <input type="text" class="form-control" formControlName="email" placeholder="E-Mail">
+          <span class="error" *ngIf="f.email.touched && f.email.errors?.required">
+            Please enter E-Mail.
+          </span>
+          <span class="error" *ngIf="f.email.touched && f.email.errors?.pattern">
+            Please enter valid email address.
+          </span>
+        </div>
+      </div>
+      <div class="form-group phone-content">
+        <label>{{'LANDING.PHONE' | translate}} <span class="font-red">*</span></label>
+        <div class="text-form">
+          <div class="form-control">
+            <ngx-intl-tel-input [cssClass]="'form-control-inner'" [enableAutoCountrySelect]="true"
+              [enablePlaceholder]="true" [searchCountryFlag]="false"
+              [searchCountryField]="[SearchCountryField.Iso2, SearchCountryField.Name]" [selectFirstCountry]="false"
+              [selectedCountryISO]="CountryISO.UnitedStates" [maxLength]="15" [tooltipField]="TooltipLabel.Name"
+              [phoneValidation]="true" name="phone" formControlName="phone" autocomplete="off">
+            </ngx-intl-tel-input>
+            <div *ngIf="f.phone?.errors">
+              <span class="error" *ngIf="f.phone.touched && f.phone.errors?.required">
+                {{'LANDING.REQPHONEERR' | translate}}
+              </span>
+              <span class="error"
+                *ngIf="f.phone.touched && f.phone.errors?.validatePhoneNumber && !f.phone.errors?.required">
+                {{'LANDING.VALIDPHONEERR' | translate}}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Logo</label>
+        <div class="text-form">
+          <div class="img-upload upload-block" *ngIf="!logoImg">
+            <input type="file" accept="image/*" class="file-upload" (change)="onSelectLogo($event)">
+            <span class="add-icon">+</span>
+            <span class="add-text">Upload</span>
+          </div>
+          <div class="img-upload upload-block" *ngIf="logoImg">
+            <span class="img">
+              <img [src]="logoImg" (change)="onSelectLogo($event)">
+              <span *ngIf="logoImg" class="close-icon" (click)="removeLogo()"><i class="fa fa-times"></i></span>
+            </span>
+          </div>
+
+        </div>
+      </div>
+      <div class="form-group form-category">
+        <label>Type<span class="font-red">*</span></label>
+        <div class="text-form">
+          <div class="pos-rel">
+            <tag-input class="form-control tag-chip tag-name" [formControlName]="'pageTypes'"
+              [separatorKeyCodes]='[9, 188]' [placeholder]="'Add'" [secondaryPlaceholder]="'Add new type'"
+              [maxItems]="3" [onlyFromAutocomplete]="true" (keyup)="checkEnterCharForType($event.target.value)"
+              (onAdd)="checkEnterCharForType($event)" on-focusout="whenFocusOut('type')">
+              <!-- <tag-input-dropdown [appendToBody]="true" [zIndex]="2000"
+                [autocompleteObservable]="requestAutocompleteItemsForTypes">
+                <ng-template let-item="item" let-index="index">
+                  {{ item.display }}
+                </ng-template>
+              </tag-input-dropdown> -->
+
+              <tag-input-dropdown [showDropdownIfEmpty]="true" [appendToBody]="true" [zIndex]="2000"
+                [autocompleteItems]="requestAutocompleteItemsForTypesData">
+                <ng-template let-item="item" let-index="index">
+                  {{ item.display }}
+                </ng-template>
+              </tag-input-dropdown>
+            </tag-input>
+            <span *ngIf="!ifTypeExist && isTypeApiRun" class="no-user-data">
+              No types found
+            </span>
+            <span class="error" *ngIf="f.pageTypes.touched && f.pageTypes.value.length === 0">
+              Please add at least one type.
+            </span>
+          </div>
+          <span class="info">
+            Help people find your Page by choosing categories that represent your Page. Pages may have up to three
+            categories. We only keep the most specific categories.
+          </span>
+          <ul class="btn-list">
+            <li><button class="btn-primary btn-after-login" type="button" (click)="saveInsideForm('type')"
+                [disabled]="f.pageTypes.value.length === 0">Save Changes</button></li>
+            <li><a href="javascript:void(0);" (click)="cancelInsideForm('type')">Cancel</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Description</label>
+        <div class="text-form">
+          <textarea class="form-control" rows="6" placeholder="Description" formControlName="description"
+            maxlength="400"></textarea>
+          <span class="text-limit">{{f.description.value?.length}}/400</span>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Address<span class="font-red">*</span></label>
+        <div class="text-form">
+          <ul class="address-list">
+            <li>
+              <input type="text" class="form-control" placeholder="Address" formControlName="fullAddress"
+                ngx-google-places-autocomplete (onAddressChange)="handleAddressChange($event)" autocomplete="off">
+              <span class="error" *ngIf="f.fullAddress.touched && f.fullAddress.errors?.required">
+                *Please enter address.
+              </span>
+            </li>
+            <li>
+              <input type="text" class="form-control" placeholder="Street Address" formControlName="street">
+              <span class="error" *ngIf="f.street.touched && f.street.errors?.required">
+                *Please enter street.
+              </span>
+            </li>
+            <li>
+              <input type="text" class="form-control" placeholder="City" formControlName="city">
+              <span class="error" *ngIf="f.city.touched && f.city.errors?.required">
+                *Please enter city.
+              </span>
+            </li>
+            <li>
+              <input type="text" class="form-control" placeholder="State" formControlName="state">
+              <span class="error" *ngIf="f.state.touched && f.state.errors?.required">
+                *Please enter state.
+              </span>
+            </li>
+            <li>
+              <input type="text" class="form-control" placeholder="Country" formControlName="country">
+              <span class="error" *ngIf="f.country.touched && f.country.errors?.required">
+                *Please enter country.
+              </span>
+            </li>
+            <li>
+              <input type="text" class="form-control" placeholder="Zipcode" formControlName="zipCode">
+              <!-- <span class="error" *ngIf="f.zipCode.touched && f.zipCode.errors?.required">
+                *Please enter zipcode.
+              </span> -->
+            </li>
+          </ul>
+          <div class="map-container location-map">
+            <agm-map [latitude]="f.locationLat.value" [longitude]="f.locationLon.value" [zoom]="zoom"
+              [streetViewControl]="false" [disableDefaultUI]="false" [zoomControl]="false">
+              <agm-marker [latitude]="f.locationLat.value" [longitude]="f.locationLon.value" [markerDraggable]="true"
+                (dragEnd)="markerDragEnd($event)">
+              </agm-marker>
+            </agm-map>
+          </div>
+          <div class="checkbox-sec">
+            <!-- <label class="checkbox-block">
+              <input class="share-post" type="checkbox" name="map">
+              <span class="checkmark"></span>Customers visit my business at my street address (unticking this box will hide your street address and check-ins)
+            </label> -->
+            <ul class="btn-list">
+              <li>
+                <button class="btn-primary btn-after-login"
+                  [disabled]="f.fullAddress.errors?.required || f.street.errors?.required || f.city.errors?.required || f.state.errors?.required"
+                  type="button" (click)="saveInsideForm('address')">
+                  Save Changes
+                </button>
+              </li>
+              <li>
+                <a href="javascript:void(0);" (click)="cancelInsideForm('address')">
+                  Cancel
+                </a>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Located In</label>
+        <div class="text-form">
+          <div class="checkbox-sec">
+            <label class="checkbox-block">
+              <input class="share-post" type="checkbox" name="loacated-in" formControlName="insideLocation"
+                (click)="onChangeInsideLocation($event.target.checked)">
+              <span class="checkmark"></span>Located inside another place
+            </label>
+          </div>
+          <input type="text" class="form-control" placeholder="Add Details (e. g. inside Grand Central static)"
+            formControlName="insideLocationDetails" [readonly]="!f.insideLocation?.value">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Parking</label>
+        <div class="text-form">
+          <ul class="checkbox-sec">
+            <li *ngFor="let item of parkingTypes; let i = index">
+              <label class="checkbox-block">
+                <input class="share-post" type="checkbox" name="parkingType{{i}}" [checked]="item?.checked"
+                  (click)="onSelectParkingType(i, $event.target.checked)">
+                <span class="checkmark"></span>{{item?.display}}
+              </label>
+            </li>
+          </ul>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Public Transit</label>
+        <div class="text-form">
+          <input type="text" class="form-control" placeholder="Tell everyone how to get to the place"
+            formControlName="publicTransitDetails">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Policy Urls</label>
+        <div class="text-form">
+          <a *ngIf="settingsData?.policyUrls?.length < 2" (click)="openAddPolicyUrlsView('add')"
+            class="add-address btn-primary btn-after-login">Add Policy Urls</a>
+          <div class="row">
+            <div class="col-sm-12">
+              <ul class="education-timeline">
+                <li *ngFor="let item of settingsData?.policyUrls; let i = index">
+                  <div class="company-detail policy-detail">
+                    <a href="{{item}}" target="_blank" class="links">{{item}}</a>
+                  </div>
+                  <div class="action">
+                    <a (click)="openAddPolicyUrlsView('edit',item, i)" class="company-icon last">
+                      <i class="fa fa-pencil"></i>
+                    </a>
+                    <a class="company-icon" (click)="deletePolicyUrls('delete',i)">
+                      <i class="fa fa-trash-o"></i>
+                    </a>
+                  </div>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Opening hours headquarter</label>
+        <div class="text-form hours-form">
+          <h4>Hours</h4>
+          <ul class="checkbox-sec hours-list">
+            <li *ngFor="let item of openHoursArr; let i = index">
+              <label class="checkbox-block custom-radio-block">
+                <input class="share-post" type="radio" name="openHours" formControlName="openHours"
+                  value="{{item?.value}}">
+                <span class="checkmark"></span>{{item?.name}}
+              </label>
+            </li>
+          </ul>
+          <ul class="checkbox-sec opening-hours" *ngIf="f.openHours?.value === 'SELECT_HOURS'">
+            <ng-container formArrayName="openHoursDayWise">
+              <li *ngFor="let item of updateSettingsForm.get('openHoursDayWise').controls; let i = index">
+                <div formGroupName="{{i}}">
+                  <label class="checkbox-block">
+                    <input class="share-post" type="checkbox" formControlName="checked">
+                    <span class="checkmark"></span>
+                    {{item.controls.name.value}}
+                  </label>
+                  <ul class="timing-block">
+                    <li>
+                      <input class="form-control" (click)="openSetTimePopUP('startTime',i)" formControlName="start"
+                        placeholder="Start">
+                    </li>
+                    <li>
+                      <input class="form-control" (click)="openSetTimePopUP('endTime',i)" formControlName="end"
+                        placeholder="End">
+                    </li>
+                  </ul>
+                </div>
+              </li>
+            </ng-container>
+          </ul>
+          <ul class="btn-list">
+            <li>
+              <button class="btn-primary btn-after-login" type="button" (click)="saveInsideForm('hours')"
+                [disabled]="f.openHours.value === 'SELECT_HOURS' && !isAnyDaySelectedOrNot()">
+                Save Changes
+              </button>
+            </li>
+            <li>
+              <a href="javascript:void(0);" (click)="cancelInsideForm('hours')">
+                Cancel
+              </a>
+            </li>
+          </ul>
+        </div>
+        <br>
+        <label class="mt-15">{{'EYERNEPROFILE.BRANCHORSTOREADDRESS' | translate}}</label>
+        <div class="text-form mt-15">
+          <p class="text-right">
+            <a *ngIf="settingsData?.addresses?.length < 20000" (click)="openAddAddressView('add')"
+              class="add-address btn-primary btn-after-login">Add</a>
+          </p>
+          <div class="row">
+            <div class="col-sm-12">
+              <ul class="education-timeline">
+                <li *ngFor="let item of settingsData?.addresses">
+                  <div class="company-detail">
+                    <div class="logo">
+                      <img src="./../../../../assets/image/mall.svg">
+                    </div>
+                    <div class="detail">
+                      <h6>{{item?.city}}, {{item?.state}}, {{item?.country}}</h6>
+                      <span>{{displayOpenHoursName(item?.openHours)}}</span>
+                    </div>
+                  </div>
+                  <div class="action">
+                    <a (click)="openAddAddressView('edit',item)" class="company-icon last">
+                      <i class="fa fa-pencil"></i>
+                    </a>
+                    <a class="company-icon" (click)="deleteAddress('delete',item)">
+                      <i class="fa fa-trash-o"></i>
+                    </a>
+                  </div>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+      </div>
+      <div class="form-group">
+        <label>Add Impressum</label>
+        <div class="text-form">
+          <textarea class="form-control" rows="6" placeholder="Impressum" formControlName="impressum"
+            maxlength="1000"></textarea>
+          <span class="text-limit">{{f.impressum.value?.length}}/1000</span>
+        </div>
+      </div>
+      <div class="form-group form-category">
+        <label>Key Words</label>
+        <div class="text-form">
+          <tag-input class="form-control tag-chip tag-name" [formControlName]="'keywords'" [placeholder]="'Add'"
+            [secondaryPlaceholder]="'Add new keyword'" [onlyFromAutocomplete]="true"
+            (keyup)="checkEnterCharForKeyword($event.target.value)" (onAdd)="checkEnterCharForKeyword($event)"
+            on-focusout="whenFocusOut('keyword')">
+            <tag-input-dropdown [appendToBody]="true" [zIndex]="2000"
+              [autocompleteObservable]="requestAutocompleteItemsForKeywords">
+              <ng-template let-item="item" let-index="index">
+                {{ item?.display }}
+              </ng-template>
+            </tag-input-dropdown>
+          </tag-input>
+          <span *ngIf="!ifKeywordExist && isKeywordApiRun" class="no-user-data">
+            No keywords found
+          </span>
+          <span class="info">Help people find your Page by choosing Keywords that represent your Page. Pages may have up
+            to three Keywords. We only keep the most specific Keywords.
+          </span>
+          <ul class="btn-list">
+            <li><button class="btn-primary btn-after-login" type="button" [disabled]="f.keywords.value.length === 0"
+                (click)="saveInsideForm('keywords')">Save Changes</button>
+            </li>
+            <li><a href="javascript:void(0);" (click)="cancelInsideForm('keywords')">Cancel</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Choose Background Color</label>
+        <div class="text-form">
+          <div class="background-color-sec">
+            <span class="color">
+              <input [(colorPicker)]="backgroundColor" [style.background]="backgroundColor" />
+            </span>
+            <span class="sub-title">Set as Background Color</span>
+            <ul class="color-list"></ul>
+          </div>
+          <ul class="btn-list">
+            <li><button class="btn-primary btn-after-login">Preview</button></li>
+            <li><a href="javascript:void(0);">Cancel</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Web Address</label>
+        <div class="text-form">
+          <span>
+            <a href="{{ WebUrl + '/' + f.websiteUrl.value}}" target="_blank">
+              {{WebUrl + '/' + f.websiteUrl.value}}
+            </a>
+          </span>
+          <input type="text" class="form-control" formControlName="websiteUrl" (keydown)="onSpaceEvent($event)"
+            placeholder="Address part of URL">
+        </div>
+      </div>
+      <!-- <div class="form-group">
+        <label>Privacy</label>
+        <div class="text-form">
+          <ul class="checkbox-sec privacy-list">
+            <li>
+              <label class="checkbox-block custom-radio-block">
+                <input class="share-post" type="radio" name="pagePrivacy" formControlName="pagePrivacy" value="PUBLIC">
+                <span class="checkmark"></span>Public
+              </label>
+            </li>
+            <li>
+              <label class="checkbox-block custom-radio-block">
+                <input class="share-post" type="radio" name="pagePrivacy" formControlName="pagePrivacy" value="ONLY_ME">
+                <span class="checkmark"></span>Only Me
+              </label>
+            </li>
+          </ul>
+        </div>
+      </div> -->
+      <div class="form-group">
+        <label>Membership Approval</label>
+        <div class="text-form">
+          <ul class="checkbox-sec privacy-list">
+            <li>
+              <label class="checkbox-block custom-radio-block">
+                <input class="share-post" type="radio" name="membershipApproval" formControlName="membershipApproval"
+                  value="ANYONE">
+                <span class="checkmark"></span>Anyone
+              </label>
+            </li>
+            <li>
+              <label class="checkbox-block custom-radio-block">
+                <input class="share-post" type="radio" name="membershipApproval" formControlName="membershipApproval"
+                  value="ADMIN_ONLY">
+                <span class="checkmark"></span>Admin Only
+              </label>
+            </li>
+          </ul>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Posting Permission</label>
+        <div class="text-form">
+          <ul class="checkbox-sec privacy-list">
+            <li>
+              <label class="checkbox-block custom-radio-block">
+                <input class="share-post" type="radio" name="postingPermission" formControlName="postingPermission"
+                  value="ANYONE">
+                <span class="checkmark"></span>Anyone
+              </label>
+            </li>
+            <li>
+              <label class="checkbox-block custom-radio-block">
+                <input class="share-post" type="radio" name="postingPermission" formControlName="postingPermission"
+                  value="ADMIN_ONLY">
+                <span class="checkmark"></span>Admin Only
+              </label>
+            </li>
+          </ul>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Visibility</label>
+        <div class="text-form">
+          <ul class="checkbox-sec privacy-list">
+            <li>
+              <label class="checkbox-block custom-radio-block">
+                <input class="share-post" type="radio" formControlName="pageVisibility" name="pageVisibility"
+                  value="PUBLISHED">
+                <span class="checkmark"></span>Published
+              </label>
+            </li>
+            <li>
+              <label class="checkbox-block custom-radio-block">
+                <input class="share-post" type="radio" formControlName="pageVisibility" name="pageVisibility"
+                  value="UNPUBLISHED">
+                <span class="checkmark"></span>Unpublished
+              </label>
+            </li>
+          </ul>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Disable Posts of Other People</label>
+        <div class="text-form">
+          <tag-input class="form-control tag-chip tag-name" [formControlName]="'disableUsers'" [placeholder]="'Add'"
+            [secondaryPlaceholder]="'Type name'" [onlyFromAutocomplete]="true">
+            <tag-input-dropdown [appendToBody]="true" [zIndex]="2000" [autocompleteItems]="memberListData">
+              <ng-template let-item="item" let-index="index">
+                {{ item?.display }}
+              </ng-template>
+            </tag-input-dropdown>
+          </tag-input>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Allow Sharing</label>
+        <div class="text-form">
+          <ul class="checkbox-sec allow-sharing-list">
+            <li>
+              <label class="checkbox-block">
+                <input class="share-post" type="checkbox" formControlName="allowSharing" name="allow-sharing">
+                <span class="checkmark"></span>Turning this option on will allow other users of EyErne to share the
+                PRO’s Page content to their EyE Wall
+              </label>
+            </li>
+          </ul>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Allow Tagging</label>
+        <div class="text-form">
+          <ul class="checkbox-sec allow-sharing-list">
+            <li>
+              <label class="checkbox-block">
+                <input class="share-post" type="checkbox" formControlName="allowTagging" name="allow-tagging">
+                <span class="checkmark"></span> Allow users to tag other users in Photos, Videos and Stickies
+              </label>
+            </li>
+          </ul>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Country Restriction</label>
+        <div class="text-form">
+          <tag-input class="form-control tag-chip tag-name" [formControlName]="'restrictionCountries'"
+            [placeholder]="'Add'" [disable]="f.restrictionCriteria.value === 'NONE'"
+            [secondaryPlaceholder]="'Add Country'" [onlyFromAutocomplete]="true"
+            (keyup)="checkEnterCharForCountry($event.target.value)" (onAdd)="checkEnterCharForCountry($event)"
+            on-focusout="whenFocusOut('country')">
+            <tag-input-dropdown [appendToBody]="true" [zIndex]="2000"
+              [autocompleteObservable]="requestAutocompleteItemsForCountries">
+              <ng-template let-item="item" let-index="index">
+                {{ item?.display }}
+              </ng-template>
+            </tag-input-dropdown>
+          </tag-input>
+          <span *ngIf="!ifCountryExist && isCountryApiRun" class="no-user-data">
+            No countries found
+          </span>
+          <ul class="checkbox-sec hours-list country-list">
+            <li>
+              <label class="checkbox-block custom-radio-block">
+                <input class="share-post" type="radio" formControlName="restrictionCriteria" name="restrictionCriteria"
+                  value="NONE">
+                <span class="checkmark"></span>None
+              </label>
+            </li>
+            <li>
+              <label class="checkbox-block custom-radio-block">
+                <input class="share-post" type="radio" formControlName="restrictionCriteria" name="restrictionCriteria"
+                  value="SHOW">
+                <span class="checkmark"></span>Only Show this PRO’s Page to viewers in these countries
+              </label>
+            </li>
+            <li>
+              <label class="checkbox-block custom-radio-block">
+                <input class="share-post" type="radio" formControlName="restrictionCriteria" name="restrictionCriteria"
+                  value="HIDE">
+                <span class="checkmark"></span>Hide this PRO’s Page from viewers in these Countries
+              </label>
+            </li>
+          </ul>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Age Restriction</label>
+        <div class="text-form">
+          <div class="custom-select-group">
+            <div class="select-area">
+              <select class="select-box" formControlName="ageCriteria">
+                <option value="{{item}}" *ngFor="let item of ageArr">
+                  <ng-container *ngIf="item === 65">{{item + '+'}}</ng-container>
+                  <ng-container *ngIf="item !== 65">{{item}}</ng-container>
+                </option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Block Stickies and Notes that contain these words</label>
+        <div class="text-form block-stickies">
+          <div class="pos-rel">
+            <input type="text" class="form-control" formControlName="negativeWordsText"
+              placeholder="Notes that contain these words" (keyup.enter)="addNegativeWords($event)" maxlength="45">
+            <!-- <span class="text-limit">{{f.negativeWordsText.value.length}}/45</span> -->
+            <span class="text-limit emoji-icon">{{f.negativeWordsText.value.length}}/45</span>
+          </div>
+
+          <ul class="meta-tag">
+            <li *ngFor="let item of negativeWords; let i = index">
+              <span>{{item}}
+                <i class="fa fa-times" (click)="deleteNegativeWords(i)"></i>
+              </span>
+            </li>
+          </ul>
+          <ul class="btn-list">
+            <li>
+              <button class="btn-primary btn-after-login" type="button" [disabled]="negativeWords.length === 0"
+                (click)="saveInsideForm('block-words')">
+                Save Changes
+              </button>
+            </li>
+            <li>
+              <a href="javascript:void(0);" (click)="cancelInsideForm('block-words')">
+                Delete All
+              </a>
+            </li>
+          </ul>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Profanity Filter</label>
+        <div class="text-form">
+          <ul class="checkbox-sec privacy-list">
+            <li>
+              <label class="checkbox-block custom-radio-block">
+                <input class="share-post" type="radio" formControlName="profanityFilter" name="profanityFilter"
+                  value="MODERATE">
+                <span class="checkmark"></span>Moderate
+              </label>
+            </li>
+            <li>
+              <label class="checkbox-block custom-radio-block">
+                <input class="share-post" type="radio" formControlName="profanityFilter" name="profanityFilter"
+                  value="STRONG">
+                <span class="checkmark"></span>Strong
+              </label>
+            </li>
+          </ul>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Similar Page Suggestions</label>
+        <div class="text-form">
+          <ul class="checkbox-sec allow-sharing-list">
+            <li>
+              <label class="checkbox-block">
+                <input class="share-post" type="checkbox" formControlName="enableSimilarPages"
+                  name="similar-suggestion">
+                <span class="checkmark"></span>Similar pages would be based on the category/type that the PRO’s pages
+                belongs to.
+              </label>
+            </li>
+          </ul>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Auto Stickie Update</label>
+        <div class="text-form">
+          <ul class="checkbox-sec allow-sharing-list">
+            <li>
+              <label class="checkbox-block">
+                <input class="share-post" type="checkbox" formControlName="autoStickieUpdate" name="auto-stickie">
+                <span class="checkmark"></span>A new stickie will be added to the PRO’s page wall, everytime the
+                description for the PRO’s page.
+              </label>
+            </li>
+          </ul>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Allow Auto Translate</label>
+        <div class="text-form">
+          <ul class="checkbox-sec allow-sharing-list">
+            <li>
+              <label class="checkbox-block">
+                <input class="share-post" type="checkbox" formControlName="allowAutoTranslate" name="auto-translate">
+                <span class="checkmark"></span>Auto-translate PRO's Page in user's language
+              </label>
+            </li>
+          </ul>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Allow To Write in multiple languages</label>
+        <div class="text-form">
+          <ul class="checkbox-sec allow-sharing-list">
+            <li>
+              <label class="checkbox-block">
+                <input class="share-post" type="checkbox" formControlName="allowMultipleLanguages"
+                  name="multiple-languages">
+                <span class="checkmark"></span>Allow user to post stickie in another language
+              </label>
+            </li>
+          </ul>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Stickies Ranking</label>
+        <div class="text-form">
+          <ul class="checkbox-sec privacy-list">
+            <li>
+              <label class="checkbox-block custom-radio-block">
+                <input class="share-post" type="radio" name="stickieRanking" formControlName="stickieRanking"
+                  value="MOST_RECENT">
+                <span class="checkmark"></span>Most Recent
+              </label>
+            </li>
+            <li>
+              <label class="checkbox-block custom-radio-block">
+                <input class="share-post" type="radio" name="stickieRanking" formControlName="stickieRanking"
+                  value="HIGHEST_FLEEKS">
+                <span class="checkmark"></span>Highest On Fleeks
+              </label>
+            </li>
+          </ul>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Content Distribution</label>
+        <div class="text-form">
+          <ul class="checkbox-sec privacy-list">
+            <li>
+              <label class="checkbox-block custom-radio-block">
+                <input class="share-post" type="radio" name="allowContentDistribution"
+                  formControlName="allowContentDistribution" value="true">
+                <span class="checkmark"></span>Allow Downloading
+              </label>
+            </li>
+            <li>
+              <label class="checkbox-block custom-radio-block">
+                <input class="share-post" type="radio" name="allowContentDistribution"
+                  formControlName="allowContentDistribution" value="false">
+                <span class="checkmark"></span>Prohibit Downloading
+              </label>
+            </li>
+          </ul>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Remove PRO’s Page</label>
+        <div class="text-form">
+          <button class="btn-primary btn-after-login btn-cancel" type="button"
+            (click)="DeleteProsPage()">Delete</button>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Stickies Publishing</label>
+        <div class="text-form">
+          <ul class="checkbox-sec privacy-list">
+            <li>
+              <label class="checkbox-block custom-radio-block">
+                <input class="share-post" type="radio" formControlName="stickiesPublishing" name="stickiesPublishing"
+                  value="AS_ME">
+                <span class="checkmark"></span>As Me
+              </label>
+            </li>
+            <li>
+              <label class="checkbox-block custom-radio-block">
+                <input class="share-post" type="radio" formControlName="stickiesPublishing" name="stickiesPublishing"
+                  value="{{updateSettingsForm.controls.name.value}}">
+                <span class="checkmark"></span>{{updateSettingsForm.controls.name.value}}
+              </label>
+            </li>
+          </ul>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Notifications</label>
+        <div class="text-form">
+          <p>Get a notification each time there is activity on your PRO’s Page or an important PRO's page update</p>
+          <ul class="notification-switch-list">
+            <li *ngFor="let item of notificationSettingsArr; let i = index">
+              <div class="custom-toggle">
+                <input class="switch-input" id="id-name--{{i}}" name="new-note{{i}}" type="checkbox"
+                  [checked]="item?.checked" (click)="onChangeNotificationSettings(i, $event.target.checked)"
+                  value="{{item?.value}}">
+                <label class="switch-label" for="id-name--{{i}}">
+                  <span>{{item?.name}}</span>
+                </label>
+              </div>
+            </li>
+          </ul>
+          <ul class="checkbox-sec hours-list">
+            <li>
+              <label class="checkbox-block custom-radio-block">
+                <input class="share-post" type="radio" name="notificationMedium" formControlName="notificationMedium"
+                  value="PAGE">
+                <span class="checkmark"></span>
+                EyErne
+                <!-- Get one notification every 12 - 24 hours on all activity and updates on your Page during that time -->
+              </label>
+            </li>
+            <li>
+              <label class="checkbox-block custom-radio-block">
+                <input class="share-post" type="radio" name="notificationMedium" formControlName="notificationMedium"
+                  value="EMAIL">
+                <span class="checkmark"></span> Email
+              </label>
+            </li>
+            <!-- <li>
+              <label class="checkbox-block custom-radio-block">
+                <input class="share-post" type="radio" name="notificationMedium" formControlName="notificationMedium"
+                  value="OFF">
+                <span class="checkmark"></span>
+                Phone
+              </label>
+            </li> -->
+          </ul>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Block Member/PRO’s Page</label>
+        <div class="text-form">
+          <tag-input class="form-control tag-chip tag-name" [placeholder]="'Add'" [secondaryPlaceholder]="'Type name'"
+            [formControlName]="'blockUsers'" [onlyFromAutocomplete]="true">
+            <tag-input-dropdown [appendToBody]="true" [zIndex]="2000" [autocompleteItems]="memberListData">
+              <ng-template let-item="item" let-index="index">
+                {{ item?.display }}
+              </ng-template>
+            </tag-input-dropdown>
+          </tag-input>
+          <ul class="btn-list">
+            <li><button class="btn-primary btn-after-login" type="button" [disabled]="f.blockUsers.value.length === 0"
+                (click)="saveInsideForm('blockUsers')">Save Changes</button>
+            </li>
+            <li><a href="javascript:void(0);" (click)="cancelInsideForm('blockUsers')">Cancel</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Authorization for Adverts for Politics and National Issues</label>
+        <div class="text-form">
+          <label>USA</label>
+          <div class="img-upload upload-block">
+            <input type="file" multiple
+              accept="application/msword, application/vnd.ms-excel, application/vnd.ms-powerpoint, text/plain, application/pdf, image/*"
+              class="file-upload" (change)="onSelectFile($event)">
+            <span class="add-icon">+</span>
+            <span class="add-text">Upload</span>
+          </div>
+          <div class="file-upload-block form-control" *ngFor="let item of attachFileArr; let i = index"
+            [ngClass]="{'uploaded-files' : item?.file.includes('https') === true, 'disabled-files' : item?.file.includes('https') === false}">
+            <a href="{{item?.file}}" target="_blank" download="{{item?.name}}">{{item?.name}}</a>
+            <span class="cancel-icon" (click)="removeSelectedFile(i)"><i class="fa fa-times"></i></span>
+          </div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Cross Posting</label>
+        <div class="text-form">
+          <tag-input class="form-control tag-chip tag-name" [placeholder]="'Add'" [secondaryPlaceholder]="'Type name'"
+            [formControlName]="'crossPostingPageIds'" (keyup)="checkEnterCharForCrossPosting($event.target.value)"
+            (onAdd)="checkEnterCharForCrossPosting($event)" on-focusout="whenFocusOut('crossPosting')"
+            [onlyFromAutocomplete]="true">
+            <tag-input-dropdown [appendToBody]="true" [zIndex]="2000"
+              [autocompleteObservable]="requestAutocompleteItemsForCrossPosting">
+              <ng-template let-item="item" let-index="index">
+                {{ item?.display }}
+              </ng-template>
+            </tag-input-dropdown>
+          </tag-input>
+          <span *ngIf="!ifCrossPostingExist && isCrossPostingApiRun" class="no-user-data">
+            No page found
+          </span>
+        </div>
+        <div class="text-form">
+          <ul class="checkbox-sec">
+            <li *ngFor="let item of crossPostingOptions; let i = index">
+              <label class="checkbox-block">
+                <input class="share-post" type="checkbox" name="crossPostingType{{i}}" [checked]="item?.checked"
+                  (click)="onSelectCrossPostionType(i, $event.target.checked)">
+                <span class="checkmark"></span>{{item?.display}}
+              </label>
+            </li>
+          </ul>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>EyE Chat</label>
+        <div class="text-form">
+          <h4>Switch Accounts</h4>
+          <ul class="checkbox-sec privacy-list messenger-list">
+            <li>
+              <label class="checkbox-block custom-radio-block">
+                <input class="share-post" type="radio" name="eyeChatSwitchAccount"
+                  formControlName="eyeChatSwitchAccount" value="PAGE">
+                <span class="checkmark"></span>PRO’s Page
+              </label>
+            </li>
+            <li *ngIf="(userData | json) != '{}'">
+              <label class="checkbox-block custom-radio-block">
+                <input class="share-post" type="radio" name="eyeChatSwitchAccount"
+                  formControlName="eyeChatSwitchAccount" value="USER">
+                <span class="checkmark"></span>{{userData?.firstName}} {{userData?.lastName}}
+              </label>
+            </li>
+          </ul>
+          <h4>Auto Reply</h4>
+          <textarea class="form-control" rows="6" placeholder="Description"
+            formControlName="eyeChatAutoReplyMsg"></textarea>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Add Action Buttons</label>
+        <div class="text-form">
+          <ul class="checkbox-sec action-btn">
+            <li *ngFor="let item of allActionButtonsArr; let i = index">
+              <label class="checkbox-block">
+                <input class="share-post" type="checkbox" name="actionBtn{{i}}"
+                  (click)="onChangeActionButtons(i, $event.target.checked)" [checked]=item?.checked>
+                <span class="checkmark"></span>{{item?.name}}
+              </label>
+            </li>
+          </ul>
+        </div>
+      </div>
+      <div class="form-group btn-sec">
+        <div class="text-form ">
+          <ul class="btn-list btn-confirm">
+            <li>
+              <button class="btn-primary btn-after-login" type="button" [disabled]="!updateSettingsForm.valid"
+                (click)="updateProsPageSetting()">
+                Save Changes
+              </button>
+            </li>
+            <li>
+              <button class="btn-primary btn-after-login" type="button" routerLink="/pros-page/pros-pages">
+                Cancel
+              </button>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
